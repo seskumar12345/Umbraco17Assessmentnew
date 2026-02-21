@@ -1,0 +1,149 @@
+﻿@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco17Assessmentnew.Services
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@inject IReadingTimeService ReadingTimeService
+@{
+    Layout = null;
+
+    // ── Read properties from IPublishedContent ──────────────────────────────
+    var title       = Model.Value<string>("title")       ?? Model.Name ?? "Untitled";
+    var intro       = Model.Value<string>("intro");
+    var publishDate = Model.Value<DateTime?>("publishDate");
+
+    // Body is stored as rich text — Value<string> returns the rendered HTML
+    var bodyHtml    = Model.Value<string>("body");
+
+    // Hero image via Media Picker
+    var heroImages  = Model.Value<IEnumerable<IPublishedContent>>("heroImage");
+    var hero        = heroImages?.FirstOrDefault();
+
+    // Reading-time estimate (strips HTML internally)
+    var readingTime = ReadingTimeService.GetLabel(bodyHtml);
+
+    // Breadcrumb / pager data
+    var parent      = Model.Parent;
+    var siblings    = parent?.Children
+                             .Where(c => c.ContentType.Alias == "article" && c.IsVisible())
+                             .OrderByDescending(c => c.Value<DateTime?>("publishDate") ?? c.CreateDate)
+                             .ToList()
+                      ?? new List<IPublishedContent>();
+
+    int idx  = siblings.FindIndex(s => s.Id == Model.Id);
+    var prev = idx > 0                          ? siblings[idx - 1] : null;
+    var next = idx >= 0 && idx < siblings.Count - 1 ? siblings[idx + 1] : null;
+
+    // Page <title>
+    var pageTitle = $"{title} – {parent?.Name ?? "Articles"}";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@pageTitle</title>
+    @if (!string.IsNullOrWhiteSpace(intro))
+    {
+        <meta name="description" content="@intro" />
+    }
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container">
+            @if (parent != null)
+            {
+                <a class="back-link" href="@parent.Url()">← Back to @parent.Name</a>
+            }
+        </div>
+    </header>
+
+    <main class="container article-detail" id="main-content">
+
+        @* ── Hero image ── *@
+        @if (hero != null)
+        {
+            <figure class="article-detail__hero">
+                <img src="@(hero.Url())?width=1200&height=500&mode=crop"
+                     alt="@(hero.Name ?? title)"
+                     width="1200" height="500" />
+            </figure>
+        }
+
+        <article>
+            <header class="article-detail__header">
+                <h1 class="article-detail__title">@title</h1>
+
+                <div class="article-detail__meta">
+                    @if (publishDate.HasValue)
+                    {
+                        <time datetime="@publishDate.Value.ToString("yyyy-MM-dd")"
+                              class="article-detail__date">
+                            @publishDate.Value.ToString("dd MMMM yyyy")
+                        </time>
+                        <span aria-hidden="true" class="meta-sep">·</span>
+                    }
+                    <span class="article-detail__reading-time"
+                          aria-label="Estimated reading time">
+                        @readingTime
+                    </span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(intro))
+                {
+                    <p class="article-detail__intro">@intro</p>
+                }
+            </header>
+
+            @* ── Rich-text body ── *@
+            @if (!string.IsNullOrWhiteSpace(bodyHtml))
+            {
+                <div class="article-detail__body richtext">
+                    @Html.Raw(bodyHtml)
+                </div>
+            }
+
+            @* ── Newsletter form ── *@
+            <aside class="newsletter-box" aria-label="Newsletter sign-up">
+                @if (TempData["NewsletterSuccess"] != null)
+                {
+                    <p class="newsletter-success" role="status">✅ You're subscribed!</p>
+                }
+                else
+                {
+                    <h2>Stay updated</h2>
+                    @using (Html.BeginUmbracoForm<Umbraco17Assessmentnew.Controllers.NewsletterSurfaceController>(
+                        nameof(Umbraco17Assessmentnew.Controllers.NewsletterSurfaceController.Subscribe)))
+                    {
+                        @Html.AntiForgeryToken()
+                        <label for="newsletter-email">Email address</label>
+                        <input id="newsletter-email" type="email" name="Email"
+                               placeholder="you@example.com" autocomplete="email" required />
+                        <button type="submit">Subscribe</button>
+                    }
+                }
+            </aside>
+        </article>
+
+        @* ── Prev / Next pager ── *@
+        @if (prev != null || next != null)
+        {
+            <nav class="article-pager" aria-label="Article navigation">
+                @if (prev != null)
+                {
+                    <a class="article-pager__prev" href="@prev.Url()">
+                        ← @(prev.Value<string>("title") ?? prev.Name)
+                    </a>
+                }
+                @if (next != null)
+                {
+                    <a class="article-pager__next" href="@next.Url()">
+                        @(next.Value<string>("title") ?? next.Name) →
+                    </a>
+                }
+            </nav>
+        }
+
+    </main>
+</body>
+</html>

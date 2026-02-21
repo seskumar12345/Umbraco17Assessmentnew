@@ -1,0 +1,85 @@
+﻿@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Cms.Web.Common.PublishedModels
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null;
+
+    // Get child nodes of content type "article", ordered newest first
+    var articles = Model.Children
+        .Where(c => c.ContentType.Alias == "article" && c.IsVisible())
+        .OrderByDescending(c => c.Value<DateTime?>("publishDate") ?? c.CreateDate)
+        .ToList();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.Name</title>
+    <link rel="stylesheet" href="/css/site.css" />
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1 class="site-title">@Model.Name</h1>
+        </div>
+    </header>
+
+    <main class="container" id="main-content">
+
+        @if (!articles.Any())
+        {
+            <p class="no-articles">No articles published yet — check back soon.</p>
+        }
+        else
+        {
+            <ul class="article-list" aria-label="Articles">
+                @foreach (var article in articles)
+                {
+                    var title       = article.Value<string>("title") ?? article.Name ?? "Untitled";
+                    var intro       = article.Value<string>("intro");
+                    var publishDate = article.Value<DateTime?>("publishDate");
+
+                    // Hero image: MediaPicker stores an IEnumerable<MediaWithCrops>
+                    var heroImages = article.Value<IEnumerable<IPublishedContent>>("heroImage");
+                    var hero       = heroImages?.FirstOrDefault();
+                    //var heroImages = Model.Value<IEnumerable<IPublishedContent>>("heroImage");
+                    <li class="article-card">
+                        @if (hero != null)
+                        {
+                            <a href="@article.Url()" tabindex="-1" aria-hidden="true">
+                                <img class="article-card__thumb"
+                                     src="@(hero.Url())?width=640&height=360&mode=crop"
+                                     alt="@(hero.Name ?? title)"
+                                     loading="lazy"
+                                     width="640" height="360" />
+                            </a>
+                        }
+
+                        <div class="article-card__body">
+                            <h2 class="article-card__title">
+                                <a href="@article.Url()">@title</a>
+                            </h2>
+
+                            @if (!string.IsNullOrWhiteSpace(intro))
+                            {
+                                <p class="article-card__intro">@intro</p>
+                            }
+
+                            <footer class="article-card__meta">
+                                @if (publishDate.HasValue)
+                                {
+                                    <time datetime="@publishDate.Value.ToString("yyyy-MM-dd")">
+                                        @publishDate.Value.ToString("dd MMMM yyyy")
+                                    </time>
+                                }
+                            </footer>
+                        </div>
+                    </li>
+                }
+            </ul>
+
+           }
+    </main>
+</body>
+</html>
