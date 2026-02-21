@@ -1,0 +1,25 @@
+{
+  "$schema": "../../umbraco-package-schema.json",
+  "name": "Article Stats Dashboard",
+  "version": "1.0.0",
+  "allowPublicAccess": false,
+  "extensions": [
+    {
+      "type": "dashboard",
+      "alias": "article.stats.dashboard",
+      "name": "Article Stats Dashboard",
+      "element": "/App_Plugins/ArticleDashboard/article-dashboard.js",
+      "weight": -100,
+      "meta": {
+        "label": "Article Stats",
+        "pathname": "article-stats"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "Umb.Section.Content"
+        }
+      ]
+    }
+  ]
+}
