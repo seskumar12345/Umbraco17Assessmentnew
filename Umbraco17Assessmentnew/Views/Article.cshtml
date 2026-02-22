@@ -14,8 +14,7 @@
     var bodyHtml    = Model.Value<string>("body");
 
     // Hero image via Media Picker
-    var heroImages  = Model.Value<IEnumerable<IPublishedContent>>("heroImage");
-    var hero        = heroImages?.FirstOrDefault();
+   var hero = Model.Value<IPublishedContent>("heroImage");
 
     // Reading-time estimate (strips HTML internally)
     var readingTime = ReadingTimeService.GetLabel(bodyHtml);

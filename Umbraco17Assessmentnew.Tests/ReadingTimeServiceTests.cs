@@ -1,4 +1,4 @@
-using Umbraco17Assessment.Services;
+using Umbraco17Assessmentnew.Services;
 using Xunit;
 
 namespace Umbraco17Assessment.Tests;
@@ -10,7 +10,7 @@ namespace Umbraco17Assessment.Tests;
 public sealed class ReadingTimeServiceTests
 {
     // Helper: create the service with a round WPM for easy arithmetic
-    private static ReadingTimeService Svc(int wpm = 100) => new(wpm);
+    private static ReadingTimeServicenew Svc(int wpm = 100) => new(wpm);
 
     [Fact]
     public void Calculate_NullText_ReturnsZero()

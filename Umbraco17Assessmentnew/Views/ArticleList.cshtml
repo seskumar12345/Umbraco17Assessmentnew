@@ -41,8 +41,7 @@
                     var publishDate = article.Value<DateTime?>("publishDate");
 
                     // Hero image: MediaPicker stores an IEnumerable<MediaWithCrops>
-                    var heroImages = article.Value<IEnumerable<IPublishedContent>>("heroImage");
-                    var hero       = heroImages?.FirstOrDefault();
+                   var hero = Model.Value<IPublishedContent>("heroImage");
                     //var heroImages = Model.Value<IEnumerable<IPublishedContent>>("heroImage");
                     <li class="article-card">
                         @if (hero != null)
